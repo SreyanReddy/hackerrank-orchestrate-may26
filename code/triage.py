@@ -40,10 +40,13 @@ Rules you MUST follow:
 5.  REPLY with an out-of-scope message if the issue is clearly unrelated to any supported company
     (status: "replied", request_type: "invalid").
 6.  Base your response ONLY on the support documentation provided — do not make up or hallucinate policies.
-7.  Keep responses concise, professional, and helpful.
+7.  Keep responses concise, professional, and helpful. Start your response with 'Hi,' and write in a friendly, professional tone.
 8.  product_area should be a specific category like "Billing", "Account Access",
     "Assessments", "API", "Card Services", "Payments", "Technical Issue", etc.
 9.  Always respond in English unless the ticket itself is clearly and entirely written in another language. Do not switch languages based on retrieved documents.
+10. In your justification field, always mention which article you used by
+    including the article title and its source URL. Example:
+    "Based on 'Pause Subscription' (https://support.hackerrank.com/articles/...) — the article confirms..."
 
 Output ONLY the JSON object — no markdown, no explanation outside the JSON.
 """
