@@ -47,7 +47,7 @@ def extract_title(metadata, body, filepath):
             break
 
     if heading_match:
-        return heading_match.group(1).strip()
+        return heading_match
 
     name = filepath.stem
     name = name.replace("-", " ")
