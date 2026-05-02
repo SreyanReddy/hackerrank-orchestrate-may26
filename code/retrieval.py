@@ -1,6 +1,12 @@
+import json
 import numpy as np
+from pathlib import Path
 from sklearn.metrics.pairwise import cosine_similarity
 from corpus_loader import load_corpus
+
+CACHE_DIR = Path(__file__).parent.parent / ".cache"
+EMBEDDINGS_FILE = CACHE_DIR / "embeddings.npy"
+CHUNKS_FILE = CACHE_DIR / "chunks.json"
 
 
 def chunk_text(text, size=400, overlap=50):
@@ -30,11 +36,19 @@ class CorpusIndex:
         return self.model
 
     def build(self):
+        if EMBEDDINGS_FILE.exists() and CHUNKS_FILE.exists():
+            print("Loading cached index...")
+            self.embeddings = np.load(str(EMBEDDINGS_FILE))
+            with open(CHUNKS_FILE, encoding="utf-8") as f:
+                self.chunks = json.load(f)
+            print(f"Index ready --> {len(self.chunks)} chunks loaded from cache")
+            return
+
         documents = load_corpus()
         print(f"Building search index from {len(documents)} documents...")
 
         for doc in documents:
-            full_text = (doc["title"] + ". ") * 3 + doc["content"]   # More weight to the title
+            full_text = (doc["title"] + ". ") * 3 + doc["content"]
             for chunk in chunk_text(full_text):
                 self.chunks.append({
                     "company": doc["company"],
@@ -47,7 +61,12 @@ class CorpusIndex:
         model = self.load_model()
         chunk_texts = [c["text"] for c in self.chunks]
         self.embeddings = model.encode(chunk_texts, batch_size=64, show_progress_bar=True)
-        print(f"Index ready --> {len(self.chunks)} chunks indexed")
+
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        np.save(str(EMBEDDINGS_FILE), self.embeddings)
+        with open(CHUNKS_FILE, "w", encoding="utf-8") as f:
+            json.dump(self.chunks, f)
+        print(f"Index ready --> {len(self.chunks)} chunks indexed and cached")
 
     def search(self, query, company=None, top_k=4):
         if self.embeddings is None:
