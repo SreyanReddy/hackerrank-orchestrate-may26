@@ -1,10 +1,28 @@
-# HackerRank Orchestrate
+# HackerRank Orchestrate — Support Triage Agent
 
 Starter repository for the **HackerRank Orchestrate** 24-hour hackathon (May 1–2, 2026).
 
-Build a terminal-based AI agent that triages real support tickets across three product ecosystems; **HackerRank**, **Claude**, and **Visa** — using only the support corpus shipped in this repo.
+This repo contains a fully working AI agent that triages real support tickets across three product ecosystems — **HackerRank**, **Claude**, and **Visa** — using RAG over the support corpus shipped in this repo.
 
 Read [`problem_statement.md`](./problem_statement.md) for the full task spec, input/output schema, and allowed values, and [`evalutation_criteria.md`](./evalutation_criteria.md) for how submissions are scored.
+
+---
+
+## How It Works
+
+1. **Corpus loading** — 774 markdown support articles are loaded from `data/` and cleaned
+2. **Semantic retrieval** — tickets are matched against the corpus using sentence embeddings (`all-MiniLM-L6-v2`)
+3. **Two-layer escalation** — rule-based keyword check runs first, then the LLM decides
+4. **LLM triage** — Ollama/qwen2.5 (local, no API key needed) classifies the ticket and writes a structured response
+5. **Output** — results written to `support_tickets/output.csv`
+
+### Key Design Decisions
+
+- **Local LLM (Ollama/qwen2.5)** — no API key required, fully offline
+- **In-memory embeddings** — 774 docs fit comfortably as a numpy array; no vector DB needed
+- **Embedding cache** — first run saves embeddings to `.cache/`; subsequent runs load instantly
+- **Title weighting** — article titles are repeated 3× during embedding for better retrieval precision
+- **Deterministic escalation** — fraud/legal/security keywords escalate before the LLM, ensuring consistent handling of high-stakes cases
 
 ---
 
@@ -80,14 +98,41 @@ Conventions:
 
 ## Quickstart
 
-Clone this repository:
+### Prerequisites
+- Python 3.10+
+- [Ollama](https://ollama.com) installed and running locally
 
 ```bash
-git clone git@github.com:interviewstreet/hackerrank-orchestrate-may26.git
-cd hackerrank-orchestrate-may26
+ollama pull qwen2.5
 ```
 
-You are free to use any language or runtime. We recommend **Python**, **JavaScript**, or **TypeScript**.
+### Install dependencies
+
+```bash
+python -m venv venv
+
+# Windows
+.\venv\Scripts\pip install -r code/requirements.txt
+
+# macOS / Linux
+venv/bin/pip install -r code/requirements.txt
+```
+
+### Run the agent
+
+```bash
+cd code
+
+# Windows
+..\venv\Scripts\python.exe main.py
+
+# macOS / Linux
+../venv/bin/python main.py
+```
+
+Output is written to `support_tickets/output.csv`.
+
+> **Note:** The first run builds the semantic index and may take ~60 seconds. Subsequent runs load from `.cache/` and start almost instantly.
 
 ---
 
